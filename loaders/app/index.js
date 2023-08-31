@@ -16,7 +16,7 @@ const appLoader = async (app, router) =>
     app.use(express.urlencoded({ extended: true }));
     app.use(morgan("dev"));
     app.use(cors());
-    app.use("/api/v1/", router);
+    app.use("/v1/", router);
     server.listen(PORT, () => {
       console.log(`App is running on port: ${PORT}`);
     });

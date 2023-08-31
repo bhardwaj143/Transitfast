@@ -57,7 +57,6 @@ router.post('/register', upload.fields([{ name: 'profile_pic', maxCount: 1 }]), 
     let password = await hashPassword(req.body.password);
     let reqstData = req.body;
     reqstData.password = password;
-    reqstData.profile_pic = req.files.profile_pic[0].path;
     let newAdmin = await addAdmin(reqstData);
     const accessToken = newAdmin.generateAuthToken(newAdmin._id);
     const refreshToken = newAdmin.generateRefershToken(newAdmin._id);
