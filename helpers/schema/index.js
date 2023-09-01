@@ -38,6 +38,11 @@ export const validationSchema = (action) => {
         email: Joi.string().email().required(),
       };
     }
+    case "ADD_VEHICAL": {
+      return {
+        licence_plate: Joi.array().unique('licence_plate')
+      };
+    }
   }
   return {};
 };

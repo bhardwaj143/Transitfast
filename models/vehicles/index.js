@@ -5,13 +5,20 @@ const vehiclesSchema = mongoose.Schema({
         type: mongoose.Schema.ObjectId,
         ref: 'Admins'
     },
-    vehicle_image: {
-        type: String,
-        required: false
-    },
+    vehicle_image: [],    
     licence_plate: {
         type: String,
-        required: false
+        index: true,
+        unique: true,
+        validate: [
+            {
+              validator: function (value) {
+                // Use a regular expression to validate that the string contains only letters.
+                return /^[a-zA-Z]+$/.test(value);
+              },
+              message: '{PATH} \'{VALUE}\' is not valid. Use only letters.'
+            },
+        ],
     },
     title: {
         type: String,

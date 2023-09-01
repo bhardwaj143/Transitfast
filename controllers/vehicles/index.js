@@ -15,8 +15,16 @@ const router = Router();
 
 
 //Vehicle Added
-router.post('/', upload.fields([{ name: 'vehicle_image', maxCount: 1 }]), adminAuth, catchAsyncAction(async (req, res) => {
-    if (req?.files?.vehicle_image?.length > 0) req.body.vehicle_image = req.files.vehicle_image[0].path;
+router.post('/', upload.fields([{ name: 'vehicle_image', maxCount: 10 }]), adminAuth, catchAsyncAction(async (req, res) => {
+    let images = [];
+    if (req.files?.vehicle_image?.length > 0) {
+        await Promise.all(
+            req.files.vehicle_image.map(async file => {
+                images.push(file.path);
+            })
+        );
+    };
+    req.body.vehicle_image = images;
     let vehicle = await addVehicle(req.body);
     return makeResponse(res, SUCCESS, true, VEHICLE_ADDED, vehicle);
 }));
