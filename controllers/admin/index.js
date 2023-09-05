@@ -17,6 +17,7 @@ import {
 import { validators } from '../../middleware/index.js';
 import upload from '../../middleware/upload/index.js';
 import  adminAuth  from '../../middleware/auth/admin.js';
+import { userMapper } from '../../helpers/mapper/index.js';
 
 //Response messages
 const { LOGIN, OTP_MISMATCH, INVALID_PASSWORD, INVALID, PASSWORD_CHANGED, ADMIN_ADDED, USER_NOTFOUND, RESET_PASSWORD, OTP_FOR_PASSWORD, VERIFY_OTP, EMAIL_NOT_REGISTER, ALREADY_EXIST, UPDATE_PROFILE, FETCH_ALL_VEHICLE } = responseMessages;
@@ -43,7 +44,8 @@ router.post('/login', validators('LOGIN'), catchAsyncAction(async (req, res) => 
     if (!passwordCorrect) return makeResponse(res, BAD_REQUEST, false, INVALID);
     const accessToken = admin.generateAuthToken(admin._id);
     const refreshToken = admin.generateRefershToken(admin._id);
-    return makeResponse(res, SUCCESS, true, LOGIN, { accessToken, refreshToken });
+    let adminDetail = await userMapper(admin);
+    return makeResponse(res, SUCCESS, true, LOGIN, adminDetail, { accessToken, refreshToken });
 }));
 
 /*

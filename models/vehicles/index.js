@@ -9,16 +9,7 @@ const vehiclesSchema = mongoose.Schema({
     licence_plate: {
         type: String,
         index: true,
-        unique: true,
-        validate: [
-            {
-              validator: function (value) {
-                // Use a regular expression to validate that the string contains only letters.
-                return /^[a-zA-Z]+$/.test(value);
-              },
-              message: '{PATH} \'{VALUE}\' is not valid. Use only letters.'
-            },
-        ],
+        unique: true
     },
     title: {
         type: String,
