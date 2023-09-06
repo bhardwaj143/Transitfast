@@ -146,9 +146,8 @@ router.post('/reset-password', validators('RESET_PASSWORD'), async (req, res) =>
 });
 
 //Update Profile
-router.patch('/', upload.fields([{ name: 'vehicle_image', maxCount: 1 }]), adminAuth, catchAsyncAction(async (req, res) => {
-    console.log("Update Vehicle", req.files);
-    if (req?.files?.vehicle_image?.length > 0) req.body.vehicle_image = req.files.vehicle_image[0].path;
+router.patch('/', upload.fields([{ name: 'profile_pic', maxCount: 1 }]), adminAuth, catchAsyncAction(async (req, res) => {
+    if (req?.files?.profile_pic?.length > 0) req.body.profile_pic = req.files.profile_pic[0].path;
     let updatedAdmin = await updateAdminProfile({ _id: req.adminData.id }, req.body);
     return makeResponse(res, SUCCESS, true, UPDATE_PROFILE, updatedAdmin);
 }))
