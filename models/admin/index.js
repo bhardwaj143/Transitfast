@@ -75,6 +75,11 @@ const adminSchema = mongoose.Schema({
         type: String,
         required: false
     },
+    isApproved: {
+        type: Boolean,
+        default: false,
+        required: false
+    },
     isDeleted: {
         type: Boolean,
         default: false,

@@ -73,6 +73,9 @@ export const responseMessages = {
   UPDATE_REQUEST: "Request Updated Successfully",
   DELETE_REQUEST: "Request Deleted Successfully",
   REQUEST_ALREADY_SENT: "Request Already Sent",
+
+  FETCH_ALL_ADMIN: "Fetch All Admin Successfully",
+  APPROVED: "Approved By Super-Admin Successfully"
 };
 
 export const notificationPayload = {};

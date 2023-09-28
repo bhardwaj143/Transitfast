@@ -12,7 +12,10 @@ import {
     addAdmin,
     updateAdminProfile,
     findAllVehicles,
-    getVehiclesCount
+    getVehiclesCount,
+    findAllAdmins,
+    getAdminsCount,
+    updateAdminBySuperAdmin
 } from '../../services/index.js';
 import { validators } from '../../middleware/index.js';
 import upload from '../../middleware/upload/index.js';
@@ -20,7 +23,7 @@ import  adminAuth  from '../../middleware/auth/admin.js';
 import { userMapper } from '../../helpers/mapper/index.js';
 
 //Response messages
-const { LOGIN, OTP_MISMATCH, INVALID_PASSWORD, INVALID, PASSWORD_CHANGED, ADMIN_ADDED, USER_NOTFOUND, RESET_PASSWORD, OTP_FOR_PASSWORD, VERIFY_OTP, EMAIL_NOT_REGISTER, ALREADY_EXIST, UPDATE_PROFILE, FETCH_ALL_VEHICLE } = responseMessages;
+const { LOGIN, OTP_MISMATCH, INVALID_PASSWORD, INVALID, PASSWORD_CHANGED, ADMIN_ADDED, USER_NOTFOUND, RESET_PASSWORD, OTP_FOR_PASSWORD, VERIFY_OTP, EMAIL_NOT_REGISTER, ALREADY_EXIST, UPDATE_PROFILE, FETCH_ALL_VEHICLE, FETCH_ALL_ADMIN, APPROVED } = responseMessages;
 //Response Status code
 const { SUCCESS, NOT_FOUND, BAD_REQUEST, RECORD_ALREADY_EXISTS } = statusCodes;
 
@@ -208,5 +211,36 @@ router.get('/filter-vehicles-list', adminAuth, catchAsyncAction(async (req, res)
         total_pages: Math.ceil(vehicleCount / limit),
     });
 }));
+
+
+//Get all the admins
+router.get('/admin-list', adminAuth, catchAsyncAction(async (req, res) => {
+    if(req.adminData.role != "SUPER-ADMIN"){
+        return makeResponse(res, BAD_REQUEST, false, 'Only Super Admin Can View This List');
+    }
+    let page = 1,
+        limit = 10,
+        skip = 0
+    if (req.query.page) page = req.query.page
+    if (req.query.limit) limit = req.query.limit
+    skip = (page - 1) * limit
+    let admin = await findAllAdmins({isDeleted: false, role: 'ADMIN'}, parseInt(skip), parseInt(limit));
+    let adminCount = await getAdminsCount({ isDeleted: false });
+    return makeResponse(res, SUCCESS, true, FETCH_ALL_ADMIN, admin,{
+        current_page: page,
+        total_records: adminCount,
+        total_pages: Math.ceil(adminCount / limit),
+    });
+}));
+
+//Update Vehicle
+router.patch('/approved-by-super-admin', adminAuth, catchAsyncAction(async (req, res) => {
+    console.log("Update Vehicle", req.files);
+    if(req.adminData.role != "SUPER-ADMIN"){
+        return makeResponse(res, BAD_REQUEST, false, 'Only Super Admin Can View This List');
+    }
+    let updatedAdmin = await updateAdminBySuperAdmin({ _id: req.body.adminId }, req.body);
+    return makeResponse(res, SUCCESS, true, APPROVED, updatedAdmin);
+}))
 
 export const adminController = router;

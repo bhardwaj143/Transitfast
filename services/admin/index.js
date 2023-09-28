@@ -32,3 +32,27 @@ export const updateAdminProfile = (_id, data) => new Promise((resolve, reject) =
       .then(resolve)
       .catch(reject);
 });
+
+//Find all admins
+export const findAllAdmins = (search, skip, limit) => new Promise((resolve, reject) => {
+  Admins.find(search)
+      .skip(skip).limit(limit)
+      .sort('-createdAt')
+      .then(resolve)
+      .catch(reject)
+});
+
+//Admins Count
+export const getAdminsCount = (search) => new Promise((resolve, reject) => {
+  Admins.countDocuments(search)
+      .then(resolve)
+      .catch(reject)
+});
+
+
+//Update Admin
+export const updateAdminBySuperAdmin = (_id, data) => new Promise((resolve, reject) => {
+  Admins.findOneAndUpdate({ _id: _id }, { $set: data }, { new: true })
+      .then(resolve)
+      .catch(reject);
+});
