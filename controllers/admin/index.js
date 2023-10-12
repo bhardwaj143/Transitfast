@@ -15,11 +15,12 @@ import {
     getVehiclesCount,
     findAllAdmins,
     getAdminsCount,
-    updateAdminBySuperAdmin
+    updateAdminBySuperAdmin,
+    findAllFilteredVehicles
 } from '../../services/index.js';
 import { validators } from '../../middleware/index.js';
 import upload from '../../middleware/upload/index.js';
-import  adminAuth  from '../../middleware/auth/admin.js';
+import adminAuth from '../../middleware/auth/admin.js';
 import { userMapper } from '../../helpers/mapper/index.js';
 
 //Response messages
@@ -55,7 +56,7 @@ router.post('/login', validators('LOGIN'), catchAsyncAction(async (req, res) => 
 NOTE: for internal use only:--
 */
 //Add Admin
-router.post('/register', upload.fields([{ name: 'profile_pic', maxCount: 1 }]),  catchAsyncAction(async (req, res) => {
+router.post('/register', upload.fields([{ name: 'profile_pic', maxCount: 1 }]), catchAsyncAction(async (req, res) => {
     if (req?.files?.profile_pic?.length > 0) req.body.profile_pic = req.files.profile_pic[0].path;
     const admin = await findByEmail({ email: req.body.email });
     if (admin) return makeResponse(res, RECORD_ALREADY_EXISTS, false, ALREADY_EXIST);
@@ -157,7 +158,7 @@ router.patch('/', upload.fields([{ name: 'profile_pic', maxCount: 1 }]), adminAu
 
 //Get all Vehicles list for super admin
 router.get('/vehicles-list', adminAuth, catchAsyncAction(async (req, res) => {
-    if(req.adminData.role != "SUPER-ADMIN"){
+    if (req.adminData.role != "SUPER-ADMIN") {
         return makeResponse(res, BAD_REQUEST, false, 'Only Super Admin Can View This List');
     }
     let page = 1,
@@ -166,9 +167,9 @@ router.get('/vehicles-list', adminAuth, catchAsyncAction(async (req, res) => {
     if (req.query.page) page = req.query.page
     if (req.query.limit) limit = req.query.limit
     skip = (page - 1) * limit
-    let vehicle = await findAllVehicles({isDeleted: false}, parseInt(skip), parseInt(limit));
+    let vehicle = await findAllVehicles({ isDeleted: false }, parseInt(skip), parseInt(limit));
     let vehicleCount = await getVehiclesCount({ isDeleted: false });
-    return makeResponse(res, SUCCESS, true, FETCH_ALL_VEHICLE, vehicle,{
+    return makeResponse(res, SUCCESS, true, FETCH_ALL_VEHICLE, vehicle, {
         current_page: page,
         total_records: vehicleCount,
         total_pages: Math.ceil(vehicleCount / limit),
@@ -176,7 +177,7 @@ router.get('/vehicles-list', adminAuth, catchAsyncAction(async (req, res) => {
 }));
 
 router.get('/filter-vehicles-list', adminAuth, catchAsyncAction(async (req, res) => {
-    if(req.adminData.role != "SUPER-ADMIN"){
+    if (req.adminData.role != "SUPER-ADMIN") {
         return makeResponse(res, BAD_REQUEST, false, 'Only Super Admin Can View This List');
     }
     let searchingVehicles = {};
@@ -189,7 +190,7 @@ router.get('/filter-vehicles-list', adminAuth, catchAsyncAction(async (req, res)
     let regx;
     let searchFilter = req.query;
     if (searchFilter) {
-        console.log("inside conditions",searchFilter);
+        console.log("inside conditions", searchFilter);
         if (searchFilter.color) searchingVehicles.color = searchFilter.color
         if (searchFilter.make) searchingVehicles.make = searchFilter.make
         if (searchFilter.price) searchingVehicles.price = searchFilter.price
@@ -199,13 +200,13 @@ router.get('/filter-vehicles-list', adminAuth, catchAsyncAction(async (req, res)
         if (searchFilter.veriant_type) searchingVehicles.veriant_type = searchFilter.veriant_type
     };
     if (!searchFilter) {
-        searchingVehicles = {      
-            isDeleted: false   
+        searchingVehicles = {
+            isDeleted: false
         }
     };
     let vehicle = await findAllVehicles(searchingVehicles, parseInt(skip), parseInt(limit));
     let vehicleCount = await getVehiclesCount({ isDeleted: false });
-    return makeResponse(res, SUCCESS, true, FETCH_ALL_VEHICLE, vehicle,{
+    return makeResponse(res, SUCCESS, true, FETCH_ALL_VEHICLE, vehicle, {
         current_page: page,
         total_records: vehicleCount,
         total_pages: Math.ceil(vehicleCount / limit),
@@ -215,7 +216,7 @@ router.get('/filter-vehicles-list', adminAuth, catchAsyncAction(async (req, res)
 
 //Get all the admins
 router.get('/admin-list', adminAuth, catchAsyncAction(async (req, res) => {
-    if(req.adminData.role != "SUPER-ADMIN"){
+    if (req.adminData.role != "SUPER-ADMIN") {
         return makeResponse(res, BAD_REQUEST, false, 'Only Super Admin Can View This List');
     }
     let page = 1,
@@ -224,9 +225,9 @@ router.get('/admin-list', adminAuth, catchAsyncAction(async (req, res) => {
     if (req.query.page) page = req.query.page
     if (req.query.limit) limit = req.query.limit
     skip = (page - 1) * limit
-    let admin = await findAllAdmins({isDeleted: false, role: 'ADMIN'}, parseInt(skip), parseInt(limit));
+    let admin = await findAllAdmins({ isDeleted: false, role: 'ADMIN' }, parseInt(skip), parseInt(limit));
     let adminCount = await getAdminsCount({ isDeleted: false });
-    return makeResponse(res, SUCCESS, true, FETCH_ALL_ADMIN, admin,{
+    return makeResponse(res, SUCCESS, true, FETCH_ALL_ADMIN, admin, {
         current_page: page,
         total_records: adminCount,
         total_pages: Math.ceil(adminCount / limit),
@@ -236,11 +237,54 @@ router.get('/admin-list', adminAuth, catchAsyncAction(async (req, res) => {
 //Update Vehicle
 router.patch('/approved-by-super-admin', adminAuth, catchAsyncAction(async (req, res) => {
     console.log("Update Vehicle", req.files);
-    if(req.adminData.role != "SUPER-ADMIN"){
+    if (req.adminData.role != "SUPER-ADMIN") {
         return makeResponse(res, BAD_REQUEST, false, 'Only Super Admin Can View This List');
     }
     let updatedAdmin = await updateAdminBySuperAdmin({ _id: req.body.adminId }, req.body);
     return makeResponse(res, SUCCESS, true, APPROVED, updatedAdmin);
-}))
+}));
+
+//Get all Vehicles list 
+router.get('/all-vehicles-list', catchAsyncAction(async (req, res) => {
+    let page = 1,
+        limit = 10,
+        skip = 0
+    if (req.query.page) page = req.query.page
+    if (req.query.limit) limit = req.query.limit
+    skip = (page - 1) * limit
+    let vehicle = await findAllVehicles({ isDeleted: false }, parseInt(skip), parseInt(limit));
+    let vehicleCount = await getVehiclesCount({ isDeleted: false });
+    return makeResponse(res, SUCCESS, true, FETCH_ALL_VEHICLE, vehicle, {
+        current_page: page,
+        total_records: vehicleCount,
+        total_pages: Math.ceil(vehicleCount / limit),
+    });
+}));
+
+
+//Get all Vehicles list 
+router.get('/filter-vehicles', catchAsyncAction(async (req, res) => {
+    let page = 1,
+        limit = 10,
+        skip = 0
+    if (req.query.page) page = req.query.page
+    if (req.query.limit) limit = req.query.limit
+    skip = (page - 1) * limit
+    let vehicle = await findAllFilteredVehicles({ isDeleted: false }, parseInt(skip), parseInt(limit));
+    const uniqueRecords = {};
+    for (const record of vehicle) {
+        const make = record.make;
+        const key = `${record.color}_${record.make}_${record.price}_${record.year}_${record.model}_${record.veriant_type}`;
+
+        // Check if the key is already in the uniqueRecords object
+        if (!uniqueRecords[key]) {
+            // If not, add the record to the uniqueRecords object
+            uniqueRecords[key] = record;
+        }
+    }
+    const uniqueData = Object.values(uniqueRecords);
+    return makeResponse(res, SUCCESS, true, FETCH_ALL_VEHICLE, uniqueData);
+}));
+
 
 export const adminController = router;

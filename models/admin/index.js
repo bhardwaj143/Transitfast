@@ -76,9 +76,9 @@ const adminSchema = mongoose.Schema({
         required: false
     },
     isApproved: {
-        type: Boolean,
-        default: false,
-        required: false
+        type: String,
+        enum: ['PENDING', 'APPROVED', 'REJECT'],
+        default: 'PENDING'
     },
     isDeleted: {
         type: Boolean,

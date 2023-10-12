@@ -42,3 +42,14 @@ export const getVehiclesCount = (search) => new Promise((resolve, reject) => {
         .then(resolve)
         .catch(reject)
 });
+
+
+//Find all Filtered Vehicles
+export const findAllFilteredVehicles = (search, skip, limit) => new Promise((resolve, reject) => {
+    Vehicles.find(search).select('color make price flue year model veriant_type')
+        .populate('adminId', 'email')
+        .skip(skip).limit(limit)
+        .sort('-createdAt')
+        .then(resolve)
+        .catch(reject)
+});
