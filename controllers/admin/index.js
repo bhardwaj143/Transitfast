@@ -271,19 +271,17 @@ router.get('/filter-vehicles', catchAsyncAction(async (req, res) => {
     if (req.query.limit) limit = req.query.limit
     skip = (page - 1) * limit
     let vehicle = await findAllFilteredVehicles({ isDeleted: false }, parseInt(skip), parseInt(limit));
-    const uniqueRecords = {};
-    for (const record of vehicle) {
-        const make = record.make;
-        const key = `${record.color}_${record.make}_${record.price}_${record.year}_${record.model}_${record.veriant_type}`;
 
-        // Check if the key is already in the uniqueRecords object
-        if (!uniqueRecords[key]) {
-            // If not, add the record to the uniqueRecords object
-            uniqueRecords[key] = record;
-        }
-    }
-    const uniqueData = Object.values(uniqueRecords);
-    return makeResponse(res, SUCCESS, true, FETCH_ALL_VEHICLE, uniqueData);
+    const properties = ["make", "color", "price", "fuel", "year", "model", "veriant_type"];
+    const data = {};
+
+    properties.forEach(property => {
+        data[property + "s"] = [...new Set(vehicle.map(record => record[property]))];
+    });
+
+    const responseData = [data];
+
+    return makeResponse(res, SUCCESS, true, FETCH_ALL_VEHICLE, responseData);
 }));
 
 
